@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -18,6 +19,7 @@ public class Player : MonoSingleton<Player>
    
     public float m_maxAccelationDuration = 2;
     public AnimationCurve m_accelerationCurve;
+    public Camera m_camera;
 
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
@@ -150,14 +152,14 @@ public class Player : MonoSingleton<Player>
         m_vel.y *= m_airFallFriction;
         if (m_wantsLeft)
         {
-            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x += m_moveAccel  * Time.fixedDeltaTime;
         }
 
-        m_vel.x *= m_airMoveFriction;
+        m_vel.x *= m_airMoveFriction * GetDragAcceleration();
 
         ApplyVelocity();
     }
@@ -175,21 +177,19 @@ public class Player : MonoSingleton<Player>
 
         if (m_vel.y <= 0)
         {
-            ResetAccelerationTime();
-
             m_state = State.Falling;
         }
 
         if (m_wantsLeft)
         {
-            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x += m_moveAccel  * Time.fixedDeltaTime;
         }
 
-        m_vel.x *= m_airMoveFriction;
+        m_vel.x *= m_airMoveFriction * GetDragAcceleration();
 
         ApplyVelocity();
     }
@@ -198,11 +198,11 @@ public class Player : MonoSingleton<Player>
     {
         if (m_wantsLeft)
         {
-            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
+            m_vel.x += m_moveAccel  * Time.fixedDeltaTime;
         }
         else if (m_vel.x >= -0.05f && m_vel.x <= 0.05)
         {
@@ -211,7 +211,7 @@ public class Player : MonoSingleton<Player>
         }
 
         m_vel.y = 0;
-        m_vel.x *= m_groundFriction;
+        m_vel.x *= m_groundFriction * GetDragAcceleration();
 
         ApplyVelocity();
 
@@ -321,8 +321,16 @@ public class Player : MonoSingleton<Player>
         ApplyVelocity();
     }
 
-    void ResetAccelerationTime()
+    void ResetAccelerationTime(float accerationTime = 0)
     {
-        m_AccelerationTimer = 0;
+        m_AccelerationTimer = accerationTime;
+    }
+
+    public Ease cameraShakeType;
+    public void ShakeCamera(float duration = 0.5f , float strength = 0.5f)
+    {
+      
+        m_camera.transform.DOShakePosition(duration, strength)
+            .SetEase(cameraShakeType);
     }
 }

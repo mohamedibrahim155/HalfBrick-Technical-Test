@@ -45,6 +45,8 @@ public class PressurePad : MonoBehaviour {
             {
                 // adding additional force based on jump pad
                player.AddAdditionalJumpForce(m_forcePush);
+
+               player.ShakeCamera();
             }
         }
     }
