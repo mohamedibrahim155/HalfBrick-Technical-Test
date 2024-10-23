@@ -288,4 +288,11 @@ public class Player : MonoSingleton<Player>
         }
         m_rigidBody.transform.position = pos;
     }
+
+    public void AddAdditionalJumpForce(float jumpForce)
+    {
+        m_vel.y += jumpForce;
+
+        ApplyVelocity();
+    }
 }
