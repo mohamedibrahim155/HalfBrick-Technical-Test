@@ -15,6 +15,9 @@ public class Player : MonoSingleton<Player>
     public float m_jumpMaxTime = 0.20f;
     public float m_airFallFriction = 0.975f;
     public float m_airMoveFriction = 0.85f;
+   
+    public float m_maxAccelationDuration = 2;
+    public AnimationCurve m_accelerationCurve;
 
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
@@ -25,6 +28,7 @@ public class Player : MonoSingleton<Player>
     private bool m_fireRight = true;
     private bool m_hasWeapon = false;
     private float m_stateTimer = 0.0f;
+    private float m_AccelerationTimer = 0;
     private Vector2 m_vel = new Vector2(0, 0);
     private List<GameObject> m_groundObjects = new List<GameObject>();
 
@@ -87,6 +91,22 @@ public class Player : MonoSingleton<Player>
         {
             m_fireRight = false;
         }
+
+        if (m_wantsRight && m_wantsLeft)
+        {
+            ResetAccelerationTime();
+        }
+    }
+
+    private float GetDragAcceleration()
+    {
+        m_AccelerationTimer += Time.fixedDeltaTime;
+
+        float clampedValue = Mathf.Clamp01((m_AccelerationTimer/m_maxAccelationDuration));
+
+        float speed = m_accelerationCurve.Evaluate(clampedValue);
+      
+        return speed;   
     }
 
     public void GiveWeapon()
@@ -97,6 +117,9 @@ public class Player : MonoSingleton<Player>
     void Idle()
     {
         m_vel = Vector2.zero;
+
+        ResetAccelerationTime();
+
         //Check to see whether to go into movement of some sort
         if (m_groundObjects.Count == 0)
         {
@@ -127,11 +150,11 @@ public class Player : MonoSingleton<Player>
         m_vel.y *= m_airFallFriction;
         if (m_wantsLeft)
         {
-            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
 
         m_vel.x *= m_airMoveFriction;
@@ -152,16 +175,18 @@ public class Player : MonoSingleton<Player>
 
         if (m_vel.y <= 0)
         {
+            ResetAccelerationTime();
+
             m_state = State.Falling;
         }
 
         if (m_wantsLeft)
         {
-            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
 
         m_vel.x *= m_airMoveFriction;
@@ -173,11 +198,11 @@ public class Player : MonoSingleton<Player>
     {
         if (m_wantsLeft)
         {
-            m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x -= (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
         else if (m_wantsRight)
         {
-            m_vel.x += m_moveAccel * Time.fixedDeltaTime;
+            m_vel.x += (m_moveAccel * GetDragAcceleration()) * Time.fixedDeltaTime;
         }
         else if (m_vel.x >= -0.05f && m_vel.x <= 0.05)
         {
@@ -294,5 +319,10 @@ public class Player : MonoSingleton<Player>
         m_vel.y += jumpForce;
 
         ApplyVelocity();
+    }
+
+    void ResetAccelerationTime()
+    {
+        m_AccelerationTimer = 0;
     }
 }
