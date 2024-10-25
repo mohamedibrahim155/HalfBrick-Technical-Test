@@ -6,11 +6,16 @@ using UnityEngine;
 public class PressurePad : MonoBehaviour {
 
     private SpriteRenderer m_sprite = null;
+    private Animator m_animator;
     private Color m_defaultColor = new Color();
     [SerializeField] private float m_forcePush = 5;
+
+    private int JumpHash;
     // Use this for initialization
     void Start () {
+        JumpHash = Animator.StringToHash("Jump");
         m_sprite = transform.GetComponent<SpriteRenderer>();
+        m_animator = transform.GetComponent<Animator>();
         m_defaultColor = m_sprite.color;
     }
 	
@@ -47,7 +52,15 @@ public class PressurePad : MonoBehaviour {
                player.AddAdditionalJumpForce(m_forcePush);
 
                player.ShakeCamera();
+
+                TriggerAnimation();
             }
         }
+    }
+
+    private void TriggerAnimation()
+    {
+        m_animator.ResetTrigger(JumpHash);
+        m_animator.SetTrigger(JumpHash);
     }
 }

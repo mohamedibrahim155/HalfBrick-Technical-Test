@@ -7,13 +7,11 @@ public class Spikes : MonoBehaviour {
     private SpriteRenderer m_sprite = null;
     private Sequence spikeSequence;
     private Color m_defaultColor = new Color();
-    private Color m_damagedColor = new Color(1,0,0);
+    private Color m_damagedColor;
     // Use this for initialization
 
     private float m_intialAnimationStartY;
-    private bool m_playerHit =false;
-
-   
+    private bool m_playerHit = false;
 
     private const int PLAYER_MASK = 1 << 6;
 
@@ -21,11 +19,12 @@ public class Spikes : MonoBehaviour {
     {
         m_sprite = transform.GetComponent<SpriteRenderer>();
         m_defaultColor = m_sprite.color;
+        m_damagedColor =Color.red;
 
         m_intialAnimationStartY =  m_sprite.transform.localPosition.y;
 
         m_sprite.transform.localPosition = new Vector3(m_sprite.transform.localPosition.x,
-            m_intialAnimationStartY -2,
+            m_intialAnimationStartY,
             m_sprite.transform.localPosition.z);
 
         SpikeAnimation();
@@ -43,12 +42,18 @@ public class Spikes : MonoBehaviour {
        
          
         spikeSequence.Append(m_sprite.transform.DOMoveY(m_intialAnimationStartY, 0.1f)  // Fast spike up (flash)
-            .SetEase(Ease.InOutFlash))                              
-            .AppendInterval(2)                                      
+            .SetEase(Ease.Linear))                              
+            .AppendInterval(1)                                      
                                                                     
-            .Append(m_sprite.transform.DOMoveY(-11, 0.5f)           
+            .Append(m_sprite.transform.DOMoveY(-12, 0.25f)           
             .SetEase(Ease.InOutFlash))                              
-            .AppendInterval(0.5f)                                
+            //.AppendInterval(2)
+            .Append(m_sprite.transform.DOMoveX(-31.2f, 0.25f))
+            .SetEase(Ease.InOutFlash)
+            .Append(m_sprite.transform.DOMoveY(m_intialAnimationStartY, 0.25f))
+            .SetEase(Ease.InOutFlash)
+            .Append(m_sprite.transform.DOMoveX(-39.0f, 0.25f))
+            .SetEase(Ease.InOutFlash)
             .SetLoops(-1);                                          
     }
 
@@ -64,7 +69,8 @@ public class Spikes : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        m_sprite.color = new Color(m_defaultColor.r / 2, m_defaultColor.g / 2, m_defaultColor.b / 2, 1);
+
+        ChangeSpriteColor(new Color(m_defaultColor.r / 2, m_defaultColor.g / 2, m_defaultColor.b / 2, 1));
 
         if ((PLAYER_MASK & (1 << collision.gameObject.layer)) != 0)
         {
@@ -76,7 +82,8 @@ public class Spikes : MonoBehaviour {
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        m_sprite.color = m_playerHit ? (m_damagedColor) : m_defaultColor;
+
+        ChangeSpriteColor(m_playerHit ? (m_damagedColor) : m_defaultColor);
 
         PlayAnimation();
     }

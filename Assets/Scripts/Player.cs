@@ -149,7 +149,7 @@ public class Player : MonoSingleton<Player>
     void Falling()
     {
         m_vel.y += m_gravity * Time.fixedDeltaTime;
-        m_vel.y *= m_airFallFriction;
+        m_vel.y *= m_airFallFriction /*+ ((!m_wantsLeft && !m_wantsRight) ?  0.1f : 0)*/;
         if (m_wantsLeft)
         {
             m_vel.x -= m_moveAccel * Time.fixedDeltaTime;
@@ -177,6 +177,7 @@ public class Player : MonoSingleton<Player>
 
         if (m_vel.y <= 0)
         {
+           // ResetAccelerationTime(0.5f);
             m_state = State.Falling;
         }
 
