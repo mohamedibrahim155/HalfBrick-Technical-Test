@@ -71,7 +71,7 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        #region OldCode
+       
         switch (m_currentState)
         {
             case State.Idle:
@@ -99,46 +99,10 @@ public class Enemy : MonoBehaviour
 
         m_wallFlags = WallCollision.None;
 
-        #endregion
-
-
-        
-
     }
 
 
-    public void ChangeEnemyState(State enemyState)
-    {
-        if (m_currentState != enemyState)
-        {
-            m_currentState = enemyState;
-        }
-    }
-
-    public void InflictDamage(float damageAmount)
-    {
-        m_isBulletHit = true;
-        m_health -= damageAmount;
-
-        if (m_health <= 0.0f)
-        {
-            print("Player should die");
-            m_vel = Vector2.zero;
-            m_timer = 0;
-            ChangeEnemyState(State.Death);
-            return;
-        }
-        else
-        {
-            m_vel = Vector2.zero;
-            m_timer = 0;
-
-            m_isBulletHit = true ;
-            ChangeEnemyState(State.Bullet_Hit);
-            return;
-        }
-    }
-
+    #region States
     void Idle()
     {
         m_vel = Vector2.zero;
@@ -237,19 +201,13 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    #region Dead
     private void Dead()
     {
-        
+
         DeadAnimation();
         m_isDead = true;
     }
-
-
-    private bool CheckState(State state)
-    {
-        return m_currentState == state;
-    }
-
     private void DeadAnimation()
     {
         if (m_isDead) return;
@@ -259,7 +217,6 @@ public class Enemy : MonoBehaviour
         deathSequence.AppendCallback(() =>
         {
             PlayOnShot(PlayerAnimationsStrings.m_bottomHit, 0.05f);
-            m_player.AddAdditionalJumpForce(6.0f);
             m_player.ShakeCamera(0.5f,1);
         })
           .AppendInterval(0.08f)
@@ -278,52 +235,26 @@ public class Enemy : MonoBehaviour
     {
         Destroy(gameObject);
     }
+    #endregion
 
-    
     void BulletHit()
     {
+        if (CheckState(State.Death)) return;
        
-        if (CheckState(State.Death))
-        {
-            return; // Don't run bullet hit logic if dead.
-        }
 
-        if (m_isBulletHit)
-        {
-            print("BulletHit");
-            //bulletHitSequence = DOTween.Sequence();
-
-            //bulletHitSequence.Append(m_sprite.DOFade(0.5f, 0.1f))
-            //    .Append(m_sprite.DOFade(1f, 0.1f))
-            //    .SetLoops(10, LoopType.Yoyo)
-            //    .SetEase(Ease.InOutExpo)
-            //    .OnComplete(() =>
-            //    {
-
-
-            //        m_sprite.DOFade(1, 0);
-            //        ChangeEnemyState(State.Idle);
-
-
-            //    });
-
-            float diff = Mathf.Sign(m_lastPlayerDiff);
-
-           PlayOnShot((diff>0 ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit), 0.5f);
-
-            m_isBulletHit = false;
-        }
-
+        float diff = Mathf.Sign(m_lastPlayerDiff);
+        PlayOnShot((diff > 0 ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit), 0);
+           
         m_timer += Time.deltaTime;
 
         if (m_timer >= m_holdDuration)
         {
-            print("Bullet hit waiter");
             m_timer = 0;
             m_currentState = State.Idle;
             return;
         }
     }
+    #endregion
 
     void ApplyVelocity()
     {
@@ -333,6 +264,8 @@ public class Enemy : MonoBehaviour
         m_rigidBody.transform.position = pos;
     }
 
+
+    #region Collisions
     private void OnCollisionEnter2D(Collision2D collision)
     {
         ProcessCollision(collision);
@@ -376,7 +309,32 @@ public class Enemy : MonoBehaviour
         m_rigidBody.transform.position = pos;
     }
 
+    public void InflictDamage(float damageAmount)
+    {
+        m_isBulletHit = true;
+        m_health -= damageAmount;
 
+        m_player.ShakeCamera(0.5f, 1);
+        if (m_health <= 0.0f)
+        {
+            m_vel = Vector2.zero;
+            m_timer = 0;
+            ChangeEnemyState(State.Death);
+            return;
+        }
+        else
+        {
+            m_vel = Vector2.zero;
+            m_timer = 0;
+
+            m_isBulletHit = true;
+            ChangeEnemyState(State.Bullet_Hit);
+            return;
+        }
+    }
+    #endregion
+
+    #region AnimationMethods
     public void PlayAnimation(string animationName)
     {
         if(m_playOneShot) return;
@@ -386,11 +344,12 @@ public class Enemy : MonoBehaviour
 
     public void PlayOnShot(string animationName, float duration = 0.05f)
     {
-      
+        StopCoroutine(WaitForTime(duration));
         if (!m_playOneShot)
         {
             m_playOneShot = true;
             m_animator.Play(animationName);
+            
             StartCoroutine(WaitForTime(duration));
         }
        
@@ -401,10 +360,20 @@ public class Enemy : MonoBehaviour
         yield return new WaitForSeconds(duration);
         m_playOneShot = false;
     }
+    #endregion
 
-    public void InvisbleSprite()
+    #region StateHandlers
+    private bool CheckState(State state)
     {
-
-        m_sprite.transform.DOBlendableScaleBy(Vector3.one*0.1f,0.1f).SetEase(Ease.InBounce);
+        return m_currentState == state;
     }
+
+    public void ChangeEnemyState(State enemyState)
+    {
+        if (m_currentState != enemyState)
+        {
+            m_currentState = enemyState;
+        }
+    }
+    #endregion
 }

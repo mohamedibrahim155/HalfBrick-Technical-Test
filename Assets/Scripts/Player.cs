@@ -21,6 +21,7 @@ public class Player : MonoSingleton<Player>
     public float m_maxAccelationDuration = 2;
     public AnimationCurve m_accelerationCurve;
     public Camera m_camera;
+    public Ease cameraShakeType;
 
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
@@ -101,22 +102,12 @@ public class Player : MonoSingleton<Player>
         }
     }
 
-    private float GetDragAcceleration()
-    {
-        m_AccelerationTimer += Time.fixedDeltaTime;
-
-        float clampedValue = Mathf.Clamp01((m_AccelerationTimer/m_maxAccelationDuration));
-
-        float speed = m_accelerationCurve.Evaluate(clampedValue);
-      
-        return speed;   
-    }
-
     public void GiveWeapon()
     {
         m_hasWeapon = true;
     }
 
+    #region States
     void Idle()
     {
         m_vel = Vector2.zero;
@@ -231,7 +222,9 @@ public class Player : MonoSingleton<Player>
             return;
         }
     }
+    #endregion
 
+    #region MovmentMethods
     void ApplyVelocity()
     {
         Vector3 pos = m_rigidBody.transform.position;
@@ -239,7 +232,32 @@ public class Player : MonoSingleton<Player>
         pos.y += m_vel.y;
         m_rigidBody.transform.position = pos;
     }
+    public void AddAdditionalJumpForce(float jumpForce)
+    {
+        m_vel.y += jumpForce;
 
+        ApplyVelocity();
+    }
+
+    void ResetAccelerationTime(float accerationTime = 0)
+    {
+        m_AccelerationTimer = accerationTime;
+    }
+
+    private float GetDragAcceleration()
+    {
+        m_AccelerationTimer += Time.fixedDeltaTime;
+
+        float clampedValue = Mathf.Clamp01((m_AccelerationTimer / m_maxAccelationDuration));
+
+        float speed = m_accelerationCurve.Evaluate(clampedValue);
+
+        return speed;
+    }
+
+    #endregion
+
+    #region Inputs
     void UpdateInput()
     {
         m_wantsLeft = Input.GetKey(KeyCode.LeftArrow);
@@ -248,25 +266,27 @@ public class Player : MonoSingleton<Player>
         m_jumpHeld = Input.GetKey(KeyCode.UpArrow);
         m_shootPressed = Input.GetKeyDown(KeyCode.Space);
     }
+    #endregion
 
+    #region Collisions
     private void OnCollisionEnter2D(Collision2D collision)
     {
         ProcessCollision(collision);
-    }
 
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        ProcessCollision(collision);
-
-       
         if (CheckEnemyHit(out Enemy enemy))
         {
             if (enemy != null)
             {
                 enemy.ChangeEnemyState(Enemy.State.Death);
+                AddAdditionalJumpForce(6.0f);
                 return;
             }
         }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        ProcessCollision(collision);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -326,7 +346,7 @@ public class Player : MonoSingleton<Player>
         m_rigidBody.transform.position = pos;
     }
 
-    public bool CheckEnemyHit( out Enemy obj)
+    private bool CheckEnemyHit( out Enemy obj)
     {
         foreach (var item in m_groundObjects)
         {
@@ -338,23 +358,16 @@ public class Player : MonoSingleton<Player>
         obj = null;
         return false;
     }
-    public void AddAdditionalJumpForce(float jumpForce)
-    {
-        m_vel.y += jumpForce;
 
-        ApplyVelocity();
-    }
+    #endregion
 
-    void ResetAccelerationTime(float accerationTime = 0)
-    {
-        m_AccelerationTimer = accerationTime;
-    }
 
-    public Ease cameraShakeType;
+    #region Camera
     public void ShakeCamera(float duration = 0.5f , float strength = 0.5f)
     {
       
         m_camera.transform.DOShakePosition(duration, strength)
             .SetEase(cameraShakeType);
     }
+    #endregion
 }
