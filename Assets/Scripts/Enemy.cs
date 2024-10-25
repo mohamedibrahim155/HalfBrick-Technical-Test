@@ -198,6 +198,8 @@ public class Enemy : MonoBehaviour
             m_currentState = State.Idle;
             return;
         }
+
+        PlayAnimation(PlayerAnimationsStrings.m_idle);
     }
 
     void Charging()
@@ -214,6 +216,8 @@ public class Enemy : MonoBehaviour
             m_currentState = State.ChargingCooldown;
             return;
         }
+
+        PlayAnimation(PlayerAnimationsStrings.m_idle);
     }
 
     void ChargingCooldown()
@@ -235,7 +239,6 @@ public class Enemy : MonoBehaviour
 
     private void Dead()
     {
-        print("DeadCalled");
         
         DeadAnimation();
         m_isDead = true;
@@ -253,28 +256,22 @@ public class Enemy : MonoBehaviour
 
         Sequence deathSequence = DOTween.Sequence();
 
-        Vector3 intialScale = m_sprite.transform.localScale;
+        deathSequence.AppendCallback(() =>
+        {
+            PlayOnShot(PlayerAnimationsStrings.m_bottomHit, 0.05f);
+            m_player.AddAdditionalJumpForce(6.0f);
+            m_player.ShakeCamera(0.5f,1);
+        })
+          .AppendInterval(0.08f)
+         // .Append(m_sprite.transform.DOScaleY(0.1f, 0.2f))
+         // .Join(m_sprite.transform.DOLocalMoveY(-24.0f, 0.2f))
+         
+          .OnComplete(() => {
 
+              DestroyEnemy();
 
-        #region Effect1
-        //deathSequence.Append(m_sprite.transform.DOLocalJump(
-        //    new Vector3(transform.position.x, transform.position.y+3,transform.position.z),
-        //    0.2f,1,0.5f))
+          });
 
-        //    .SetEase(Ease.InOutBounce)
-        //    .Append(m_sprite.transform.DOShakeScale(1,5,20))
-
-        //    .OnComplete(()=> { DestroyEnemy(); });
-        #endregion
-
-
-        #region Effect2
-        deathSequence.Append(m_sprite.transform.DOBlendableScaleBy(Vector3.one * 1.5f, 1.5f))
-            .Append(m_sprite.transform.DOScale(Vector3.one * 0.2f, 0.5f))
-            .SetEase(Ease.InBounce)
-
-            .OnComplete(() => { DestroyEnemy(); });
-        #endregion
     }
 
     void DestroyEnemy()
@@ -310,7 +307,21 @@ public class Enemy : MonoBehaviour
 
             //    });
 
+            float diff = Mathf.Sign(m_lastPlayerDiff);
+
+           PlayOnShot((diff>0 ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit), 0.5f);
+
             m_isBulletHit = false;
+        }
+
+        m_timer += Time.deltaTime;
+
+        if (m_timer >= m_holdDuration)
+        {
+            print("Bullet hit waiter");
+            m_timer = 0;
+            m_currentState = State.Idle;
+            return;
         }
     }
 
@@ -373,16 +384,14 @@ public class Enemy : MonoBehaviour
         m_animator.Play(animationName);
     }
 
-    public void PlayOnShot(string animationName, float duration = 0.1f)
+    public void PlayOnShot(string animationName, float duration = 0.05f)
     {
       
         if (!m_playOneShot)
         {
-            print("PlayOneShot");
             m_playOneShot = true;
-              m_animator.playbackTime = 0;
             m_animator.Play(animationName);
-            StartCoroutine(WaitForTime(0.3f));
+            StartCoroutine(WaitForTime(duration));
         }
        
     }
@@ -395,6 +404,7 @@ public class Enemy : MonoBehaviour
 
     public void InvisbleSprite()
     {
+
         m_sprite.transform.DOBlendableScaleBy(Vector3.one*0.1f,0.1f).SetEase(Ease.InBounce);
     }
 }

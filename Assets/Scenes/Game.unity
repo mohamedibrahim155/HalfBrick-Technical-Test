@@ -31086,7 +31086,6 @@ MonoBehaviour:
   m_chargeMinRange: 1
   m_maxHealth: 4
   m_player: {fileID: 679829336}
-  m_health: 100
   m_isDead: 0
   m_wallFlags: 0
   m_currentState: 0

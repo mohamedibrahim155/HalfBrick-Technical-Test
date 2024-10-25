@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using System.Timers;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
@@ -256,6 +257,16 @@ public class Player : MonoSingleton<Player>
     private void OnCollisionStay2D(Collision2D collision)
     {
         ProcessCollision(collision);
+
+       
+        if (CheckEnemyHit(out Enemy enemy))
+        {
+            if (enemy != null)
+            {
+                enemy.ChangeEnemyState(Enemy.State.Death);
+                return;
+            }
+        }
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -315,6 +326,18 @@ public class Player : MonoSingleton<Player>
         m_rigidBody.transform.position = pos;
     }
 
+    public bool CheckEnemyHit( out Enemy obj)
+    {
+        foreach (var item in m_groundObjects)
+        {
+            bool result = item.TryGetComponent(out Enemy b);
+
+            obj = b;
+            return result;
+        }
+        obj = null;
+        return false;
+    }
     public void AddAdditionalJumpForce(float jumpForce)
     {
         m_vel.y += jumpForce;
