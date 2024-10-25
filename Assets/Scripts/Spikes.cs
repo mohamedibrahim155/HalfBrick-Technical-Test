@@ -6,6 +6,7 @@ public class Spikes : MonoBehaviour {
 
     private SpriteRenderer m_sprite = null;
     private Sequence spikeSequence;
+    private Animator m_animator;
     private Color m_defaultColor = new Color();
     private Color m_damagedColor;
     // Use this for initialization
@@ -15,19 +16,30 @@ public class Spikes : MonoBehaviour {
 
     private const int PLAYER_MASK = 1 << 6;
 
+    public class SpikeAnimationStrings
+    {
+        public static string m_spikeUp = "SpikeUp";
+    }
+
     void Start()
     {
         m_sprite = transform.GetComponent<SpriteRenderer>();
+        m_animator = transform.GetComponent<Animator>();
         m_defaultColor = m_sprite.color;
         m_damagedColor =Color.red;
 
-        m_intialAnimationStartY =  m_sprite.transform.localPosition.y;
+        Initialise();
+
+        //SpikeAnimation();
+    }
+
+    void Initialise()
+    {
+        m_intialAnimationStartY = m_sprite.transform.localPosition.y;
 
         m_sprite.transform.localPosition = new Vector3(m_sprite.transform.localPosition.x,
             m_intialAnimationStartY,
             m_sprite.transform.localPosition.z);
-
-        SpikeAnimation();
     }
 
     // Update is called once per frame
@@ -36,6 +48,7 @@ public class Spikes : MonoBehaviour {
       
     }
 
+    #region Animation Handlers
     void SpikeAnimation()
     {
          spikeSequence = DOTween.Sequence();
@@ -66,7 +79,14 @@ public class Spikes : MonoBehaviour {
     {
         spikeSequence.Play();
     }
+    public void PlayAnimation(string animationName)
+    {
+        m_animator.Play(animationName);
+    }
+    #endregion
 
+
+    #region Collisions
     private void OnTriggerEnter2D(Collider2D collision)
     {
 
@@ -103,9 +123,12 @@ public class Spikes : MonoBehaviour {
         }
 
     }
+    #endregion
 
     private void ChangeSpriteColor(Color color)
     {
         m_sprite.color = color; 
     }
+
+    
 }
