@@ -17,12 +17,29 @@ public class Enemy : MonoBehaviour
 
     private Rigidbody2D m_rigidBody = null;
     private SpriteRenderer m_sprite = null;
-    [SerializeField]private float m_health = 100.0f;
+    private Animator m_animator = null;
+
+    private float m_health = 100.0f;
     private float m_timer = 0.0f;
     private float m_lastPlayerDiff = 0.0f;
+
    [SerializeField] private bool m_isDead = false;  
     private bool m_isBulletHit = false;  
+    private bool m_playOneShot = false;
+
     private Vector2 m_vel = new Vector2(0, 0);
+
+    private Sequence bulletHitSequence;
+
+
+    public  class PlayerAnimationsStrings
+    {
+        public static string m_idle = "Idle";
+        public static string m_bottomHit = "BottomHit";
+        public static string m_leftHit = "LeftHit";
+        public static string m_rightHit = "RightHit";
+    }
+
     public enum WallCollision
     {
         None = 0,
@@ -48,6 +65,7 @@ public class Enemy : MonoBehaviour
         m_health = m_maxHealth;
         m_rigidBody = transform.GetComponent<Rigidbody2D>();
         m_sprite = GetComponent<SpriteRenderer>();
+        m_animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -105,7 +123,19 @@ public class Enemy : MonoBehaviour
         if (m_health <= 0.0f)
         {
             print("Player should die");
+            m_vel = Vector2.zero;
+            m_timer = 0;
             ChangeEnemyState(State.Death);
+            return;
+        }
+        else
+        {
+            m_vel = Vector2.zero;
+            m_timer = 0;
+
+            m_isBulletHit = true ;
+            ChangeEnemyState(State.Bullet_Hit);
+            return;
         }
     }
 
@@ -141,6 +171,8 @@ public class Enemy : MonoBehaviour
             }
             return;
         }
+
+        PlayAnimation(PlayerAnimationsStrings.m_idle);
     }
 
     void Walking()
@@ -186,6 +218,11 @@ public class Enemy : MonoBehaviour
 
     void ChargingCooldown()
     {
+        if (CheckState(State.Death))
+        {
+            print("Death State called Inside ChargeCooldown");
+        }
+
         m_timer += Time.deltaTime;
         if (m_timer >= m_chargeCooldownDuration)
         {
@@ -198,8 +235,10 @@ public class Enemy : MonoBehaviour
 
     private void Dead()
     {
-        m_isDead = true;
+        print("DeadCalled");
+        
         DeadAnimation();
+        m_isDead = true;
     }
 
 
@@ -210,6 +249,8 @@ public class Enemy : MonoBehaviour
 
     private void DeadAnimation()
     {
+        if (m_isDead) return;
+
         Sequence deathSequence = DOTween.Sequence();
 
         Vector3 intialScale = m_sprite.transform.localScale;
@@ -244,27 +285,33 @@ public class Enemy : MonoBehaviour
     
     void BulletHit()
     {
-        print("BulletHit");
+       
+        if (CheckState(State.Death))
+        {
+            return; // Don't run bullet hit logic if dead.
+        }
 
         if (m_isBulletHit)
         {
-            Sequence bulletHitSequence = DOTween.Sequence();
+            print("BulletHit");
+            //bulletHitSequence = DOTween.Sequence();
 
-            bulletHitSequence.Append(m_sprite.DOFade(0.5f, 0.1f))
-                .Append(m_sprite.DOFade(1f, 0.1f))
-                .SetLoops(10, LoopType.Yoyo)
-                .OnComplete(() =>
-                {
+            //bulletHitSequence.Append(m_sprite.DOFade(0.5f, 0.1f))
+            //    .Append(m_sprite.DOFade(1f, 0.1f))
+            //    .SetLoops(10, LoopType.Yoyo)
+            //    .SetEase(Ease.InOutExpo)
+            //    .OnComplete(() =>
+            //    {
 
 
-                    ChangeEnemyState(State.Idle);
-                    m_isBulletHit = false;
+            //        m_sprite.DOFade(1, 0);
+            //        ChangeEnemyState(State.Idle);
 
-                });
 
+            //    });
+
+            m_isBulletHit = false;
         }
-
-
     }
 
     void ApplyVelocity()
@@ -308,11 +355,46 @@ public class Enemy : MonoBehaviour
                     //Stop us.
                     m_wallFlags = (contact.normal.x < 0) ? WallCollision.Left : WallCollision.Right;
 
+                    PlayOnShot(m_wallFlags == WallCollision.Left ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit,0.5f);
+
                     m_currentState = State.Idle;
                     m_timer = 0;
                 }
             }
         }
         m_rigidBody.transform.position = pos;
+    }
+
+
+    public void PlayAnimation(string animationName)
+    {
+        if(m_playOneShot) return;
+
+        m_animator.Play(animationName);
+    }
+
+    public void PlayOnShot(string animationName, float duration = 0.1f)
+    {
+      
+        if (!m_playOneShot)
+        {
+            print("PlayOneShot");
+            m_playOneShot = true;
+              m_animator.playbackTime = 0;
+            m_animator.Play(animationName);
+            StartCoroutine(WaitForTime(0.3f));
+        }
+       
+    }
+
+    private IEnumerator WaitForTime(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        m_playOneShot = false;
+    }
+
+    public void InvisbleSprite()
+    {
+        m_sprite.transform.DOBlendableScaleBy(Vector3.one*0.1f,0.1f).SetEase(Ease.InBounce);
     }
 }
