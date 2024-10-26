@@ -32,7 +32,7 @@ public class Enemy : MonoBehaviour
     private Sequence bulletHitSequence;
 
 
-    public  class PlayerAnimationsStrings
+    public  class EnemyAnimationStrings
     {
         public static string m_idle = "Idle";
         public static string m_bottomHit = "BottomHit";
@@ -136,7 +136,7 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        PlayAnimation(PlayerAnimationsStrings.m_idle);
+        PlayAnimation(EnemyAnimationStrings.m_idle);
     }
 
     void Walking()
@@ -163,7 +163,7 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        PlayAnimation(PlayerAnimationsStrings.m_idle);
+        PlayAnimation(EnemyAnimationStrings.m_idle);
     }
 
     void Charging()
@@ -181,7 +181,7 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        PlayAnimation(PlayerAnimationsStrings.m_idle);
+        PlayAnimation(EnemyAnimationStrings.m_idle);
     }
 
     void ChargingCooldown()
@@ -216,7 +216,7 @@ public class Enemy : MonoBehaviour
 
         deathSequence.AppendCallback(() =>
         {
-            PlayOnShot(PlayerAnimationsStrings.m_bottomHit, 0.05f);
+            PlayOnShot(EnemyAnimationStrings.m_bottomHit, 0.05f);
             m_player.ShakeCamera(0.5f,1);
         })
           .AppendInterval(0.08f)
@@ -243,7 +243,7 @@ public class Enemy : MonoBehaviour
        
 
         float diff = Mathf.Sign(m_lastPlayerDiff);
-        PlayOnShot((diff > 0 ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit), 0);
+        PlayOnShot((diff > 0 ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit), 0);
            
         m_timer += Time.deltaTime;
 
@@ -299,7 +299,7 @@ public class Enemy : MonoBehaviour
                     //Stop us.
                     m_wallFlags = (contact.normal.x < 0) ? WallCollision.Left : WallCollision.Right;
 
-                    PlayOnShot(m_wallFlags == WallCollision.Left ? PlayerAnimationsStrings.m_rightHit : PlayerAnimationsStrings.m_leftHit,0.5f);
+                    PlayOnShot(m_wallFlags == WallCollision.Left ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit, 0.05f);
 
                     m_currentState = State.Idle;
                     m_timer = 0;
