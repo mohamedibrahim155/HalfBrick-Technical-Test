@@ -1,4 +1,5 @@
 ﻿using DG.Tweening;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Timers;
@@ -25,6 +26,12 @@ public class Player : MonoSingleton<Player>
     public Animator m_muzzleFlashAnimator;
     public Ease cameraShakeType;
 
+    public Animator m_Animator;
+    public Transform m_Skin;
+    private Vector3 m_SkinScaleRight = new Vector3(0, 0);
+    private Vector3 m_SkinScaleLeft = new Vector3(0, 0);
+
+
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
     private bool m_jumpHeld = false;
@@ -37,6 +44,7 @@ public class Player : MonoSingleton<Player>
     private float m_AccelerationTimer = 0;
     private Vector2 m_vel = new Vector2(0, 0);
     private List<GameObject> m_groundObjects = new List<GameObject>();
+
 
     private enum State
     {
@@ -51,12 +59,16 @@ public class Player : MonoSingleton<Player>
     // Use this for initialization
     void Start ()
     {
+        m_SkinScaleRight = m_Skin.localScale;
+        m_SkinScaleLeft = m_SkinScaleRight;
+        m_SkinScaleLeft.x = -m_SkinScaleLeft.x;
         m_rigidBody = transform.GetComponent<Rigidbody2D>();
     }
 
     private void Update()
     {
         UpdateInput();
+        UpdateRender();
 
         if (m_shootPressed && m_hasWeapon)
         {
@@ -73,12 +85,30 @@ public class Player : MonoSingleton<Player>
         }
     }
 
+    private void UpdateRender()
+    {
+        if(m_wantsLeft)
+        {
+            m_Skin.localScale = m_SkinScaleLeft;
+        }
+        else if(m_wantsRight)
+        {
+            m_Skin.localScale = m_SkinScaleRight;
+        }
+    }
+
     void PlayMuzzleFlash( Vector2 position, bool isRight)
     {
         m_muzzleFlashAnimator.transform.position = position;
         m_muzzleFlashAnimator.gameObject.SetActive(true);
         m_muzzleFlashAnimator.GetComponent<SpriteRenderer>().flipX = isRight;
         m_muzzleFlashAnimator.SetTrigger("Fire");
+    }
+
+    private void SwitchState(State state)
+    {
+        m_Animator.CrossFade(state.ToString(),0.1f);
+        m_state = state;
     }
 
     void FixedUpdate()
@@ -132,7 +162,7 @@ public class Player : MonoSingleton<Player>
         if (m_groundObjects.Count == 0)
         {
             //No longer on the ground, fall.
-            m_state = State.Falling;
+            SwitchState(State.Falling);
             return;
         }
 
@@ -140,14 +170,14 @@ public class Player : MonoSingleton<Player>
         if (m_jumpPressed || m_jumpHeld)
         {
             m_stateTimer = 0;
-            m_state = State.Jumping;
+            SwitchState(State.Jumping);
             return;
         }
 
         //Test for input to move
         if (m_wantsLeft || m_wantsRight)
         {
-            m_state = State.Walking;
+            SwitchState(State.Walking);
             return;
         }
     }
@@ -184,7 +214,7 @@ public class Player : MonoSingleton<Player>
         if (m_vel.y <= 0)
         {
            // ResetAccelerationTime(0.5f);
-            m_state = State.Falling;
+            SwitchState(State.Falling);
         }
 
         if (m_wantsLeft)
@@ -213,7 +243,7 @@ public class Player : MonoSingleton<Player>
         }
         else if (m_vel.x >= -0.05f && m_vel.x <= 0.05)
         {
-            m_state = State.Idle;
+            SwitchState(State.Idle);
             m_vel.x = 0;
         }
 
@@ -225,14 +255,14 @@ public class Player : MonoSingleton<Player>
         if (m_groundObjects.Count == 0)
         {
             //No longer on the ground, fall.
-            m_state = State.Falling;
+            SwitchState(State.Falling);
             return;
         }
 
         if (m_jumpPressed || m_jumpHeld)
         {
             m_stateTimer = 0;
-            m_state = State.Jumping;
+            SwitchState(State.Jumping);
             return;
         }
     }
@@ -334,11 +364,11 @@ public class Player : MonoSingleton<Player>
                         //If we've been pushed up, we've hit the ground.  Go to a ground-based state.
                         if (m_wantsRight || m_wantsLeft)
                         {
-                            m_state = State.Walking;
+                            SwitchState(State.Walking);
                         }
                         else
                         {
-                            m_state = State.Idle;
+                            SwitchState(State.Idle);
                         }
                     }
                 }
@@ -346,7 +376,7 @@ public class Player : MonoSingleton<Player>
                 else
                 {
                     m_vel.y = 0;
-                    m_state = State.Falling;
+                    SwitchState(State.Falling);
                 }
             }
             else
