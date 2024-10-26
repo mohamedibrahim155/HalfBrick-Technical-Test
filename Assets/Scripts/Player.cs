@@ -17,10 +17,12 @@ public class Player : MonoSingleton<Player>
     public float m_jumpMaxTime = 0.20f;
     public float m_airFallFriction = 0.975f;
     public float m_airMoveFriction = 0.85f;
+    public float m_muzzleOffset;
    
     public float m_maxAccelationDuration = 2;
     public AnimationCurve m_accelerationCurve;
     public Camera m_camera;
+    public Animator m_muzzleFlashAnimator;
     public Ease cameraShakeType;
 
     private Rigidbody2D m_rigidBody = null;
@@ -62,9 +64,21 @@ public class Player : MonoSingleton<Player>
             GameObject projectileGO = ObjectPooler.Instance.GetObject("Bullet");
             if (projectileGO)
             {
+
                 projectileGO.GetComponent<Bullet>().Fire(transform.position, m_fireRight);
+
+                Vector3 muzzleOffsetPosition = transform.position + ((m_fireRight ? Vector3.right  :  Vector3.left) * m_muzzleOffset);
+                PlayMuzzleFlash(muzzleOffsetPosition, m_fireRight);
             }
         }
+    }
+
+    void PlayMuzzleFlash( Vector2 position, bool isRight)
+    {
+        m_muzzleFlashAnimator.transform.position = position;
+        m_muzzleFlashAnimator.gameObject.SetActive(true);
+        m_muzzleFlashAnimator.GetComponent<SpriteRenderer>().flipX = isRight;
+        m_muzzleFlashAnimator.SetTrigger("Fire");
     }
 
     void FixedUpdate()
