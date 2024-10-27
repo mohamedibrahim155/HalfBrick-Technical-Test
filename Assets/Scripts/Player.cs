@@ -13,6 +13,8 @@ using Random = UnityEngine.Random;
 
 public class Player : MonoSingleton<Player>
 {
+    public  event Action <float> OnPlayerDead = delegate { };
+
     public float m_moveAccel = (0.12f * 60.0f);
     public float m_groundFriction = 0.85f;
     public float m_gravity = (-0.05f * 60.0f);
@@ -36,7 +38,7 @@ public class Player : MonoSingleton<Player>
     public CinemachineImpulseSource m_impulseSource;
     public Vector2 m_shootImpulse = new Vector2(0,0);
 
-    public event Action OnPlayerDead = delegate { };
+   
 
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
@@ -46,7 +48,7 @@ public class Player : MonoSingleton<Player>
     private bool m_shootPressed = false;
     private bool m_fireRight = true;
     private bool m_hasWeapon = false;
-    private bool m_hasEnemyhit = false;
+    private bool m_isDead = false;
     private float m_stateTimer = 0.0f;
     private float m_AccelerationTimer = 0;
     private int m_hitHash;
@@ -61,8 +63,7 @@ public class Player : MonoSingleton<Player>
         Falling,
         Jumping,
         Walking,
-        Dead,
-        Hit
+        Dead
     };
 
     private State m_state = State.Idle;
@@ -129,6 +130,8 @@ public class Player : MonoSingleton<Player>
 
     void FixedUpdate()
     {
+        if(m_isDead) return;
+
         switch (m_state)
         {
             case State.Idle:
@@ -167,14 +170,32 @@ public class Player : MonoSingleton<Player>
 
    
 
-    private void PlayerDie()
-    {
-        OnPlayerDead?.Invoke();
-    }
+   
 
     public void PlayHitReaction()
     {
         m_Animator.CrossFade(m_hitHash, 0.1f);
+    }
+    public void CallPlayerDieExternally()
+    { 
+        SwitchState(State.Dead);
+    }
+    private void PlayerDie()
+    {
+        float dieDelay = 3;
+        m_isDead = true;
+       
+        OnPlayerDead?.Invoke(dieDelay);
+
+        StartCoroutine(Diable(dieDelay));
+    }
+
+    IEnumerator Diable(float time)
+    {
+        gameObject.transform.DOMoveY(-55, 1).SetEase(Ease.InOutSine);
+
+        yield return new WaitForSeconds(time);
+        gameObject.SetActive(false);
     }
 
     public void GiveWeapon()

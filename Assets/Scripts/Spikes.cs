@@ -99,6 +99,9 @@ public class Spikes : MonoBehaviour {
             HandleDamage(collision.gameObject);
 
             PauseSpikeAnimation();
+
+            Player.Instance.CallPlayerDieExternally();
+            
         }
     }
 

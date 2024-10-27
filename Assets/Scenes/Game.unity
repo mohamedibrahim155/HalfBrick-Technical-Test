@@ -528,7 +528,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 10
   m_Sprite: {fileID: 21300000, guid: ae40fe22b0f87d14eb7333e67631b93c, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
@@ -23069,7 +23069,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: -1573041492, guid: 9148b0233cc2353429c76b1676fb8387, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -24264,6 +24264,7 @@ GameObject:
   m_Component:
   - component: {fileID: 859319615}
   - component: {fileID: 859319616}
+  - component: {fileID: 859319617}
   m_Layer: 0
   m_Name: Transition
   m_TagString: Untagged
@@ -24308,6 +24309,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &859319617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859319614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c1cfaa334f208648ab0c2f0223405e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &878985787
 GameObject:
   m_ObjectHideFlags: 0
