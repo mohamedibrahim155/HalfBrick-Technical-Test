@@ -417,4 +417,5 @@ public class Player : MonoSingleton<Player>
         float randomMagnitude = Random.Range(velocity.x, velocity.y);
         m_impulseSource.GenerateImpulseAt(new Vector3(position.x, position.y, 0), randomDirection * randomMagnitude);
     }
+
 }
