@@ -9,6 +9,7 @@ public class Enemy : MonoBehaviour
     public float m_changeSpeed = 0.2f * 60.0f;
     public float m_moveDuration = 3.0f;
     public float m_holdDuration = 0.5f;
+    public float m_stunDuration = 0.5f;
     public float m_chargeCooldownDuration = 2.0f;
     public float m_chargeMinRange = 1.0f;
     public float m_maxHealth = 4.0f;
@@ -27,6 +28,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private bool m_isDead = false;  
     private bool m_isBulletHit = false;  
     private bool m_playOneShot = false;
+    private bool m_isStunned = false;
 
     private Vector2 m_vel = new Vector2(0, 0);
 
@@ -39,7 +41,9 @@ public class Enemy : MonoBehaviour
         public static string m_idle = "Idle";
         public static string m_bottomHit = "BottomHit";
         public static string m_leftHit = "LeftHit";
+        public static string m_leftHitLoop = "LeftHitLoop";
         public static string m_rightHit = "RightHit";
+        public static string m_rightHitLoop = "RightHitLoop";
     }
 
     public enum WallCollision
@@ -57,7 +61,9 @@ public class Enemy : MonoBehaviour
         Charging,
         ChargingCooldown,
         Bullet_Hit,
-        Death
+        Death,
+        Stun
+
     };
     [SerializeField] private State m_currentState = State.Idle;
 
@@ -94,6 +100,9 @@ public class Enemy : MonoBehaviour
             case State.Bullet_Hit:
                 BulletHit();
                 break;
+            case State.Stun:
+                Stunned();
+                break;
 
             default:
                 break;
@@ -102,6 +111,8 @@ public class Enemy : MonoBehaviour
         m_wallFlags = WallCollision.None;
 
     }
+
+    
 
 
     #region States
@@ -245,17 +256,32 @@ public class Enemy : MonoBehaviour
        
 
         float diff = Mathf.Sign(m_lastPlayerDiff);
-        PlayOnShot((diff > 0 ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit), 0);
+        PlayOnShot((diff > 0 ? EnemyAnimationStrings.m_rightHitLoop : EnemyAnimationStrings.m_leftHitLoop), 0);
            
         m_timer += Time.deltaTime;
 
         if (m_timer >= m_holdDuration)
         {
             m_timer = 0;
-            m_currentState = State.Idle;
+            ChangeEnemyState(State.Idle);
             return;
         }
     }
+
+    private void Stunned()
+    {
+
+
+        m_timer += Time.deltaTime;
+        if (m_timer >= m_stunDuration)
+        {
+            m_isStunned = false;
+            m_timer = 0;
+            ChangeEnemyState(State.Idle);
+            return;
+        }
+    }
+
     #endregion
 
     void ApplyVelocity()
@@ -271,6 +297,15 @@ public class Enemy : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         ProcessCollision(collision);
+
+        if (m_wallFlags == WallCollision.Right || m_wallFlags == WallCollision.Left)
+        {
+            if (CheckState(State.Stun)) return;
+
+            ChangeEnemyState(State.Stun);
+            PlayOnShot(m_wallFlags == WallCollision.Left ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit, 0.5f);
+
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -300,9 +335,6 @@ public class Enemy : MonoBehaviour
                     m_vel.x = 0;
                     //Stop us.
                     m_wallFlags = (contact.normal.x < 0) ? WallCollision.Left : WallCollision.Right;
-
-                    PlayOnShot(m_wallFlags == WallCollision.Left ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit, 0.05f);
-
                     m_currentState = State.Idle;
                     m_timer = 0;
                 }

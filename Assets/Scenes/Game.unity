@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -32077,9 +32076,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_moveSpeed: 3
-  m_changeSpeed: 10
+  m_changeSpeed: 20
   m_moveDuration: 3
   m_holdDuration: 0.5
+  m_stunDuration: 1
   m_chargeCooldownDuration: 2
   m_chargeMinRange: 1
   m_maxHealth: 4
