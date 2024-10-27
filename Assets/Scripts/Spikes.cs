@@ -16,6 +16,8 @@ public class Spikes : MonoBehaviour {
 
     private const int PLAYER_MASK = 1 << 6;
 
+    [SerializeField] private Vector2 m_Impulse = Vector2.zero;
+
     public class SpikeAnimationStrings
     {
         public static string m_spikeUp = "SpikeUp";
@@ -118,8 +120,7 @@ public class Spikes : MonoBehaviour {
             ChangeSpriteColor(m_damagedColor);
 
             // Restart player Die
-
-            mPlayer.ShakeCamera();
+            mPlayer.DoCameraShake(transform.position, m_Impulse);
         }
 
     }

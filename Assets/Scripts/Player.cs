@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using Cinemachine;
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
+using Random = UnityEngine.Random;
 
 public class Player : MonoSingleton<Player>
 {
@@ -24,12 +26,14 @@ public class Player : MonoSingleton<Player>
     public AnimationCurve m_accelerationCurve;
     public Camera m_camera;
     public Animator m_muzzleFlashAnimator;
-    public Ease cameraShakeType;
 
     public Animator m_Animator;
     public Transform m_Skin;
     private Vector3 m_SkinScaleRight = new Vector3(0, 0);
     private Vector3 m_SkinScaleLeft = new Vector3(0, 0);
+
+    public CinemachineImpulseSource m_impulseSource;
+    public Vector2 m_shootImpulse = new Vector2(0,0);
 
 
     private Rigidbody2D m_rigidBody = null;
@@ -103,6 +107,8 @@ public class Player : MonoSingleton<Player>
         m_muzzleFlashAnimator.gameObject.SetActive(true);
         m_muzzleFlashAnimator.GetComponent<SpriteRenderer>().flipX = isRight;
         m_muzzleFlashAnimator.SetTrigger("Fire");
+
+        DoCameraShake(position, m_shootImpulse);
     }
 
     private void SwitchState(State state)
@@ -405,13 +411,10 @@ public class Player : MonoSingleton<Player>
 
     #endregion
 
-
-    #region Camera
-    public void ShakeCamera(float duration = 0.5f , float strength = 0.5f)
+    public void DoCameraShake(Vector3 position, Vector2 velocity)
     {
-      
-        m_camera.transform.DOShakePosition(duration, strength)
-            .SetEase(cameraShakeType);
+        Vector3 randomDirection = Random.insideUnitSphere.normalized;
+        float randomMagnitude = Random.Range(velocity.x, velocity.y);
+        m_impulseSource.GenerateImpulseAt(new Vector3(position.x, position.y, 0), randomDirection * randomMagnitude);
     }
-    #endregion
 }

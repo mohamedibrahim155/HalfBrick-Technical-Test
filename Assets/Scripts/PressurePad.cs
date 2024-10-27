@@ -1,13 +1,18 @@
-﻿using System;
+﻿using Cinemachine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
+using Random = UnityEngine.Random;
 
 public class PressurePad : MonoBehaviour {
 
     private SpriteRenderer m_sprite = null;
     private Animator m_animator;
     private Color m_defaultColor = new Color();
+
+    [SerializeField] private Vector2 m_JumpPadImpulse = new Vector2(0, 0);
     [SerializeField] private float m_forcePush = 5;
 
     private int JumpHash;
@@ -51,7 +56,8 @@ public class PressurePad : MonoBehaviour {
                 // adding additional force based on jump pad
                player.AddAdditionalJumpForce(m_forcePush);
 
-               player.ShakeCamera();
+                var position = collision.gameObject.transform.position;
+                player.DoCameraShake(position, m_JumpPadImpulse);
 
                 TriggerAnimation();
             }

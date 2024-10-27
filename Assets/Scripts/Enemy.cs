@@ -23,13 +23,15 @@ public class Enemy : MonoBehaviour
     private float m_timer = 0.0f;
     private float m_lastPlayerDiff = 0.0f;
 
-   [SerializeField] private bool m_isDead = false;  
+    [SerializeField] private Vector2 m_Impulse;
+    [SerializeField] private bool m_isDead = false;  
     private bool m_isBulletHit = false;  
     private bool m_playOneShot = false;
 
     private Vector2 m_vel = new Vector2(0, 0);
 
     private Sequence bulletHitSequence;
+
 
 
     public  class EnemyAnimationStrings
@@ -217,7 +219,7 @@ public class Enemy : MonoBehaviour
         deathSequence.AppendCallback(() =>
         {
             PlayOnShot(EnemyAnimationStrings.m_bottomHit, 0.05f);
-            m_player.ShakeCamera(0.5f,1);
+            m_player.DoCameraShake(transform.position, m_Impulse);
         })
           .AppendInterval(0.08f)
          // .Append(m_sprite.transform.DOScaleY(0.1f, 0.2f))
@@ -314,7 +316,7 @@ public class Enemy : MonoBehaviour
         m_isBulletHit = true;
         m_health -= damageAmount;
 
-        m_player.ShakeCamera(0.5f, 1);
+        m_player.DoCameraShake(transform.position, m_Impulse);
         if (m_health <= 0.0f)
         {
             m_vel = Vector2.zero;
