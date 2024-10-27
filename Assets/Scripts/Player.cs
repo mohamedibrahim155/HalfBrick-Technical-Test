@@ -3,6 +3,7 @@ using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Timers;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -35,6 +36,7 @@ public class Player : MonoSingleton<Player>
     public CinemachineImpulseSource m_impulseSource;
     public Vector2 m_shootImpulse = new Vector2(0,0);
 
+    public event Action OnPlayerDead = delegate { };
 
     private Rigidbody2D m_rigidBody = null;
     private bool m_jumpPressed = false;
@@ -44,18 +46,23 @@ public class Player : MonoSingleton<Player>
     private bool m_shootPressed = false;
     private bool m_fireRight = true;
     private bool m_hasWeapon = false;
+    private bool m_hasEnemyhit = false;
     private float m_stateTimer = 0.0f;
     private float m_AccelerationTimer = 0;
+    private int m_hitHash;
     private Vector2 m_vel = new Vector2(0, 0);
     private List<GameObject> m_groundObjects = new List<GameObject>();
 
+   
 
     private enum State
     {
         Idle = 0,
         Falling,
         Jumping,
-        Walking
+        Walking,
+        Dead,
+        Hit
     };
 
     private State m_state = State.Idle;
@@ -63,10 +70,13 @@ public class Player : MonoSingleton<Player>
     // Use this for initialization
     void Start ()
     {
+       
         m_SkinScaleRight = m_Skin.localScale;
         m_SkinScaleLeft = m_SkinScaleRight;
         m_SkinScaleLeft.x = -m_SkinScaleLeft.x;
         m_rigidBody = transform.GetComponent<Rigidbody2D>();
+
+        m_hitHash = Animator.StringToHash("Hit");
     }
 
     private void Update()
@@ -133,6 +143,9 @@ public class Player : MonoSingleton<Player>
             case State.Walking:
                 Walking();
                 break;
+            case State.Dead:
+                PlayerDie();
+                break;
             default:
                 break;
         }
@@ -150,6 +163,18 @@ public class Player : MonoSingleton<Player>
         {
             ResetAccelerationTime();
         }
+    }
+
+   
+
+    private void PlayerDie()
+    {
+        OnPlayerDead?.Invoke();
+    }
+
+    public void PlayHitReaction()
+    {
+        m_Animator.CrossFade(m_hitHash, 0.1f);
     }
 
     public void GiveWeapon()
@@ -323,7 +348,7 @@ public class Player : MonoSingleton<Player>
     {
         ProcessCollision(collision);
 
-        if (CheckEnemyHit(out Enemy enemy))
+        if (CheckEnemyHitOnTop(out Enemy enemy))
         {
             if (enemy != null)
             {
@@ -396,7 +421,7 @@ public class Player : MonoSingleton<Player>
         m_rigidBody.transform.position = pos;
     }
 
-    private bool CheckEnemyHit( out Enemy obj)
+    private bool CheckEnemyHitOnTop( out Enemy obj)
     {
         foreach (var item in m_groundObjects)
         {

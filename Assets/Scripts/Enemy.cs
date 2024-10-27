@@ -29,7 +29,6 @@ public class Enemy : MonoBehaviour
     private bool m_isBulletHit = false;  
     private bool m_playOneShot = false;
     private bool m_isStunned = false;
-
     private Vector2 m_vel = new Vector2(0, 0);
 
     private Sequence bulletHitSequence;
@@ -253,11 +252,8 @@ public class Enemy : MonoBehaviour
     void BulletHit()
     {
         if (CheckState(State.Death)) return;
-       
 
-        float diff = Mathf.Sign(m_lastPlayerDiff);
-        PlayOnShot((diff > 0 ? EnemyAnimationStrings.m_rightHitLoop : EnemyAnimationStrings.m_leftHitLoop), 0);
-           
+     
         m_timer += Time.deltaTime;
 
         if (m_timer >= m_holdDuration)
@@ -305,6 +301,12 @@ public class Enemy : MonoBehaviour
             ChangeEnemyState(State.Stun);
             PlayOnShot(m_wallFlags == WallCollision.Left ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit, 0.5f);
 
+        }
+
+         const int PLAYER_LAYER = 1 << 6;
+        if ((PLAYER_LAYER & (1 << collision.gameObject.layer)) != 0)
+        {
+            m_player.PlayHitReaction();
         }
     }
 
@@ -362,6 +364,10 @@ public class Enemy : MonoBehaviour
             m_timer = 0;
 
             m_isBulletHit = true;
+
+            float diff = Mathf.Sign(m_lastPlayerDiff);
+            PlayOnShot((diff > 0 ? EnemyAnimationStrings.m_rightHit : EnemyAnimationStrings.m_leftHit), 0);
+
             ChangeEnemyState(State.Bullet_Hit);
             return;
         }
